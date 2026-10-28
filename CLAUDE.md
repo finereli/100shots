@@ -4,11 +4,11 @@ Habit tracker built on one idea: when you're bad at something, count your attemp
 
 ## Stack
 
-Svelte 5 + Vite + TypeScript PWA from the pwa skill kit (`shared/` holds the vendored kit files, keep their `pwa-kit:` headers). Deployed as a Cloudflare Worker (`wrangler.jsonc`, custom domain 100shots.finereli.com): static assets plus `POST /api/sync` and `POST /api/push/*` (`worker/index.ts`), a cron every 5 minutes for reminders, on D1 `100shots-db`.
+Svelte 5 + Vite + TypeScript PWA from the pwa skill kit (`shared/` holds the vendored kit files, keep their `pwa-kit:` headers). `shared/lib/drag-reorder.svelte.ts` is the kit's `reorder` v1 plus a local `press` action (long-press anywhere on a row to drag, no handle; `data-no-drag` opts out the card's buttons) - a candidate to promote back to the kit. Deployed as a Cloudflare Worker (`wrangler.jsonc`, custom domain 100shots.finereli.com): static assets plus `POST /api/sync` and `POST /api/push/*` (`worker/index.ts`), a cron every 5 minutes for reminders, on D1 `100shots-db`.
 
 ## Data
 
-Local-first. Everything lives in localStorage under `100shots.data.v1` (`src/lib/habits.svelte.ts`): habits with UUIDs and a list of shots (`{id, at}` in epoch ms). Shot i (0-based) is number `100 - i`; past 100 it reads +1, +2...
+Local-first. Everything lives in localStorage under `100shots.data.v1` (`src/lib/habits.svelte.ts`): habits with UUIDs and a list of shots (`{id, at}` in epoch ms). Shot i (0-based) is number `100 - i`; past 100 it reads +1, +2... The habits array order is the order on screen; dragging stamps `orderAt` and the most recent reorder wins in the merge. Card size (large/small, in Settings) is a per-device pref under `100shots.prefs.v1` (`src/lib/prefs.svelte.ts`) and doesn't sync.
 
 Sign-in is optional and goes through login.finereli.com (finereli/finereli-login), not the kit's `auth/`: the client files are the pwa kit's `login/` item (`shared/lib/finereli-login.ts`, `worker/verify-login.ts`), with `pwa-kit:` headers like the rest. Signed in, sync (`src/lib/sync.svelte.ts`) posts the whole dataset and keeps the merge (`src/lib/merge.ts`, shared with the Worker; one JSON row per Google `sub` in `docs`). Deletes leave tombstones, undo stamps `t` so it beats the delete, renames stamp `nameAt`. Signing out syncs first, then clears the device.
 

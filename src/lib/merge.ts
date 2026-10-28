@@ -8,11 +8,12 @@
 // An item carries `t`, the last time it was made alive (created or restored
 // by undo); it is alive if it was made alive after its tombstone. So an undo
 // beats the delete it undoes even if the delete already reached the server.
-// A habit's name is last-writer-wins on `nameAt`.
+// A habit's name is last-writer-wins on `nameAt`, and the order of the list
+// is last-writer-wins on `orderAt` (stamped by a drag).
 
 export interface Shot { id: string; at: number; t?: number }
 export interface Habit { id: string; name: string; nameAt?: number; createdAt: number; t?: number; shots: Shot[] }
-export interface Data { version: 1; habits: Habit[]; tombstones?: Record<string, number> }
+export interface Data { version: 1; habits: Habit[]; tombstones?: Record<string, number>; orderAt?: number }
 
 const aliveAt = (x: { t?: number }, fallback: number) => x.t ?? fallback
 
@@ -41,9 +42,12 @@ export function merge(a: Data, b: Data): Data {
     .map((id) => byId.get(id)!)
     .filter((h) => alive(h.id, aliveAt(h, h.createdAt)))
     .map((h) => ({ ...h, shots: h.shots.filter((s) => alive(s.id, aliveAt(s, s.at))) }))
-  // Keep the first copy's order (this device's), with new arrivals by age.
-  habits.sort((x, y) => rank(a, x) - rank(a, y) || x.createdAt - y.createdAt)
-  return { version: 1, habits, tombstones }
+  // Keep the order of the copy reordered last (the first copy's on a tie),
+  // with habits it doesn't have yet after it, by age.
+  const lead = (b.orderAt ?? 0) > (a.orderAt ?? 0) ? b : a
+  habits.sort((x, y) => rank(lead, x) - rank(lead, y) || x.createdAt - y.createdAt)
+  const orderAt = Math.max(a.orderAt ?? 0, b.orderAt ?? 0)
+  return orderAt ? { version: 1, habits, tombstones, orderAt } : { version: 1, habits, tombstones }
 }
 
 function rank(a: Data, h: Habit) {

@@ -11,6 +11,8 @@
     <li>Tap the check after every attempt, good or bad.</li>
     <li>Tapped by mistake? Hit Undo on the card or on the bar at the bottom.</li>
     <li>The ⋮ on a card renames or deletes the habit. Shot history lets you fix any single shot.</li>
+    <li>Hold a card for a moment, then drag it to change the order.</li>
+    <li>Lots of habits? Switch to small cards in Settings.</li>
     <li>Turn on the evening reminder in Settings. It skips days you already logged a shot.</li>
   </ul>
   <p class="note">Your shots are stored on this device. Sign in from Settings to keep them on every device.</p>

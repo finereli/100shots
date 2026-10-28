@@ -18,7 +18,7 @@ Each thing you practice is a card with a big number: how many of your 100 shots 
 - Platform: web app (PWA) for any modern browser. Installable on Android, iPhone, iPad and desktop. Works offline.
 - Data: stored on the device. With sign-in, a copy is kept on the app's server for sync. No ads or trackers.
 - Reminders: one optional evening reminder at a chosen time, skipped on days with a logged shot. On iPhone and iPad it needs the app on the Home Screen (iOS 16.4+).
-- Features: multiple habits, one-tap logging, undo, per-habit shot history with single-shot removal, rename and delete, light and dark themes.
+- Features: multiple habits, one-tap logging, undo, per-habit shot history with single-shot removal, rename and delete, drag to reorder, a small-card view, light and dark themes.
 
 ## Good fit
 

@@ -24,6 +24,7 @@ export function shotLabel(i: number): string {
 class Habits {
   list = $state<Habit[]>([])
   #tombstones: Record<string, number> = {}
+  #orderAt: number | undefined
   // Called after every local edit (sync schedules itself here).
   onEdit: () => void = () => {}
   // Called after every write, edits and merges alike (reminders mirror the list).
@@ -41,6 +42,7 @@ class Habits {
       const data = raw ? (JSON.parse(raw) as Data) : null
       this.list = data?.habits ?? []
       this.#tombstones = data?.tombstones ?? {}
+      this.#orderAt = data?.orderAt
     } catch {
       this.list = []
       this.#tombstones = {}
@@ -62,13 +64,16 @@ class Habits {
   }
 
   data(): Data {
-    return { version: 1, habits: $state.snapshot(this.list), tombstones: { ...this.#tombstones } }
+    const d: Data = { version: 1, habits: $state.snapshot(this.list), tombstones: { ...this.#tombstones } }
+    if (this.#orderAt) d.orderAt = this.#orderAt
+    return d
   }
 
   // Take a merged copy from sync. Not an edit, so it doesn't sync again.
   replace(data: Data) {
     this.list = data.habits
     this.#tombstones = data.tombstones ?? {}
+    this.#orderAt = data.orderAt
     this.#write()
   }
 
@@ -76,6 +81,7 @@ class Habits {
   clear() {
     this.list = []
     this.#tombstones = {}
+    this.#orderAt = undefined
     this.#write()
   }
 
@@ -109,6 +115,19 @@ class Habits {
   restore(h: Habit, index: number) {
     if (this.byId(h.id)) return
     this.list.splice(Math.min(index, this.list.length), 0, { ...h, t: Date.now() })
+    this.#save()
+  }
+
+  // Reorder by drag. move() runs on every swap mid-drag and only touches
+  // memory; commitOrder() saves once on drop and stamps the order for sync.
+  move(from: number, to: number) {
+    const [h] = this.list.splice(from, 1)
+    this.list.splice(to, 0, h)
+  }
+
+  commitOrder(before: string[]) {
+    if (before.join() === this.list.map((h) => h.id).join()) return
+    this.#orderAt = Date.now()
     this.#save()
   }
 

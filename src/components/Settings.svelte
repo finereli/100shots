@@ -3,6 +3,7 @@
   import { reminders, formatTime } from '../lib/reminders.svelte'
   import { account, login } from '../lib/account.svelte'
   import { sync } from '../lib/sync.svelte'
+  import { prefs } from '../lib/prefs.svelte'
 
   let tested = $state(false)
   let confirmingSignOut = $state(false)
@@ -18,6 +19,21 @@
 </script>
 
 <div class="settings">
+  <section>
+    <h3>Cards</h3>
+    <div class="card">
+      <p class="lead">Small cards fit about three times as many habits on the screen. Hold any card to drag it into a new order.</p>
+      <div class="seg" role="radiogroup" aria-label="Card size">
+        <button role="radio" aria-checked={!prefs.compact} class:on={!prefs.compact} onclick={() => prefs.setCompact(false)}>
+          <Icon name="view_agenda" size={20} /> Large
+        </button>
+        <button role="radio" aria-checked={prefs.compact} class:on={prefs.compact} onclick={() => prefs.setCompact(true)}>
+          <Icon name="view_stream" size={20} /> Small
+        </button>
+      </div>
+    </div>
+  </section>
+
   <section>
     <h3>Reminders</h3>
     <div class="card">
@@ -139,6 +155,19 @@
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
   .btn.ghost { color: var(--text-secondary); }
   .btn:disabled { opacity: 0.5; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border); }
+  .seg button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    border-radius: 9px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .seg button.on { background: var(--bg-raised); color: var(--text-primary); box-shadow: var(--shadow-card); }
   .note { font-size: 0.85rem; color: var(--text-secondary); }
   .ok { font-size: 0.85rem; color: var(--ok); }
   .err { font-size: 0.85rem; color: var(--danger); }

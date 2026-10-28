@@ -14,7 +14,9 @@
   import InstallBanner from './components/InstallBanner.svelte'
   import ReminderBanner from './components/ReminderBanner.svelte'
   import { reminders, isIOS, isStandalone } from './lib/reminders.svelte'
+  import { DragReorder } from '$shared/lib/drag-reorder.svelte'
   import { habits } from './lib/habits.svelte'
+  import { prefs } from './lib/prefs.svelte'
   import { router } from './lib/router.svelte'
 
   router.start()
@@ -48,6 +50,15 @@
   const offerInstall = $derived(onboarding && !isStandalone && !installDone && (isIOS || installable))
   const offerReminder = $derived(onboarding && !offerInstall && reminders.canOffer)
 
+  // Hold a card to pick it up, drag to reorder. The order saves on drop.
+  let before: string[] = []
+  const reorder = new DragReorder({
+    onstart: () => { before = habits.list.map((h) => h.id); navigator.vibrate?.(15) },
+    onmove: (from, to) => habits.move(from, to),
+    ondrop: () => habits.commitOrder(before),
+    scrollEl: () => document.querySelector('main'),
+  })
+
   function toggleDark() {
     dark = !dark
     setDarkMode(dark)
@@ -69,15 +80,23 @@
     {:else if habit}
       <HabitDetail {habit} />
     {:else}
-      <div class="list">
+      <div class="list" class:compact={prefs.compact}>
         {#if habits.list.length === 0}
           <div class="intro">
             <p class="big">Expect 100 bad attempts.</p>
             <p>Pick something you're bad at. Your first attempt is number 100, the next is 99, and so on down. Every bad one is part of the plan.</p>
           </div>
         {/if}
-        {#each habits.list as h (h.id)}
-          <HabitCard habit={h} />
+        {#each habits.list as h, i (h.id)}
+          <div
+            class="slot"
+            class:dragging={reorder.dragIndex === i}
+            use:reorder.row={i}
+            use:reorder.press={i}
+            style={reorder.styleFor(i)}
+          >
+            <HabitCard habit={h} compact={prefs.compact} />
+          </div>
         {/each}
         <AddHabit autofocus={habits.list.length === 0} />
       </div>
@@ -131,6 +150,15 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+  .list.compact { gap: 10px; }
+  .slot { position: relative; }
+  /* The picked-up card floats above the others. */
+  .slot.dragging { z-index: 5; }
+  .slot.dragging :global(.card) {
+    scale: 1.02;
+    border-color: var(--accent-light);
+    box-shadow: 0 10px 30px rgba(44, 24, 16, 0.18);
   }
   .intro { padding: 12px 6px 4px; line-height: 1.55; color: var(--text-secondary); }
   .intro .big { font-family: var(--font-num); font-size: 1.6rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; line-height: 1.2; }

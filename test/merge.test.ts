@@ -40,4 +40,17 @@ describe('merge', () => {
     expect(merge(d, d)).toEqual(merge(merge(d, d), d))
     expect(ids(merge(d, d))).toEqual(ids(d))
   })
+
+  it('the later reorder wins, on both sides of the merge', () => {
+    const server = data([habit('a'), habit('b', { createdAt: 2 }), habit('c', { createdAt: 3 })])
+    const phone: Data = { ...data([habit('c', { createdAt: 3 }), habit('a'), habit('b', { createdAt: 2 })]), orderAt: 50 }
+    const order = (d: Data) => d.habits.map((h) => h.id).join('')
+    expect(order(merge(server, phone))).toBe('cab')
+    expect(order(merge(phone, server))).toBe('cab')
+    expect(merge(server, phone).orderAt).toBe(50)
+    // An older reorder elsewhere loses, and its new habit goes at the end.
+    const laptop: Data = { ...data([habit('b', { createdAt: 2 }), habit('a'), habit('d', { createdAt: 4 })]), orderAt: 20 }
+    expect(order(merge(merge(server, phone), laptop))).toBe('cabd')
+    expect(order(merge(laptop, merge(server, phone)))).toBe('cabd')
+  })
 })
