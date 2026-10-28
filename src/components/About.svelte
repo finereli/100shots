@@ -10,6 +10,7 @@
     <li>Add a habit for each thing you're practicing.</li>
     <li>Tap the check after every attempt, good or bad.</li>
     <li>Tapped by mistake? Hit Undo on the card or on the bar at the bottom.</li>
+    <li>Want to remember how one went? Tap Note on the bar after logging it, or tap any shot in its history.</li>
     <li>The ⋮ on a card renames or deletes the habit. Shot history lets you fix any single shot.</li>
     <li>Hold a card for a moment, then drag it to change the order.</li>
     <li>Lots of habits? Switch to small cards in Settings.</li>

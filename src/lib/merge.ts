@@ -8,10 +8,10 @@
 // An item carries `t`, the last time it was made alive (created or restored
 // by undo); it is alive if it was made alive after its tombstone. So an undo
 // beats the delete it undoes even if the delete already reached the server.
-// A habit's name is last-writer-wins on `nameAt`, and the order of the list
+// A habit's name is last-writer-wins on `nameAt`, a shot's note on `noteAt`, and the order of the list
 // is last-writer-wins on `orderAt` (stamped by a drag).
 
-export interface Shot { id: string; at: number; t?: number }
+export interface Shot { id: string; at: number; t?: number; note?: string; noteAt?: number }
 export interface Habit { id: string; name: string; nameAt?: number; createdAt: number; t?: number; shots: Shot[] }
 export interface Data { version: 1; habits: Habit[]; tombstones?: Record<string, number>; orderAt?: number }
 
@@ -59,7 +59,15 @@ function mergeShots(x: Shot[], y: Shot[]): Shot[] {
   const m = new Map<string, Shot>()
   for (const s of [...x, ...y]) {
     const prev = m.get(s.id)
-    m.set(s.id, prev ? { ...prev, t: Math.max(aliveAt(prev, prev.at), aliveAt(s, s.at)) } : s)
+    if (!prev) { m.set(s.id, s); continue }
+    const merged: Shot = { ...prev, t: Math.max(aliveAt(prev, prev.at), aliveAt(s, s.at)) }
+    // The later note edit wins; a cleared note (noteAt, no text) wins too.
+    if ((s.noteAt ?? 0) > (prev.noteAt ?? 0)) {
+      merged.noteAt = s.noteAt
+      if (s.note) merged.note = s.note
+      else delete merged.note
+    }
+    m.set(s.id, merged)
   }
   return [...m.values()].sort((p, q) => p.at - q.at)
 }

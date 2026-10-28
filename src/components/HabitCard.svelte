@@ -75,7 +75,10 @@
     if (!s) return
     pop++
     navigator.vibrate?.(12)
-    undo.offer(`${habit.name}: ${Math.max(TARGET - n, 0)} left`, () => habits.removeShot(habit.id, s.id))
+    undo.offer(`${habit.name}: ${Math.max(TARGET - n, 0)} left`, () => habits.removeShot(habit.id, s.id), 5000, {
+      note: (text) => habits.setNote(habit.id, s.id, text),
+      placeholder: `Note on ${habit.name}`,
+    })
   }
 
   function undoLast(e: MouseEvent) {

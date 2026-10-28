@@ -158,6 +158,17 @@ class Habits {
     this.#save()
   }
 
+  // A note on a shot. Empty clears it; the stamp lets sync keep the latest.
+  setNote(id: string, shotId: string, text: string) {
+    const s = this.byId(id)?.shots.find((x) => x.id === shotId)
+    const note = text.trim()
+    if (!s || (s.note ?? '') === note) return
+    if (note) s.note = note
+    else delete s.note
+    s.noteAt = Date.now()
+    this.#save()
+  }
+
   undoLast(id: string) {
     const h = this.byId(id)
     const last = h?.shots.at(-1)

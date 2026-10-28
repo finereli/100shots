@@ -53,4 +53,19 @@ describe('merge', () => {
     expect(order(merge(merge(server, phone), laptop))).toBe('cabd')
     expect(order(merge(laptop, merge(server, phone)))).toBe('cabd')
   })
+
+  it('the later note edit wins, and a cleared note stays cleared', () => {
+    const shot = (over = {}) => habit('h', { shots: [{ id: 's1', at: 10, ...over }] })
+    const note = (d: Data) => d.habits[0].shots[0].note
+    const phone = data([shot({ note: 'too fast', noteAt: 20 })])
+    const laptop = data([shot({ note: 'bad grip', noteAt: 30 })])
+    const old = data([shot()])
+    expect(note(merge(phone, laptop))).toBe('bad grip')
+    expect(note(merge(laptop, phone))).toBe('bad grip')
+    expect(note(merge(old, phone))).toBe('too fast')
+    expect(note(merge(phone, old))).toBe('too fast')
+    const cleared = data([shot({ noteAt: 40 })])
+    expect(note(merge(laptop, cleared))).toBeUndefined()
+    expect(note(merge(cleared, laptop))).toBeUndefined()
+  })
 })
