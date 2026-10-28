@@ -78,6 +78,15 @@ class Habits {
     this.#save()
   }
 
+  // Reorder: the list's order is the order on screen. move() is called on
+  // every swap during a drag, so it only touches memory; save() commits.
+  move(from: number, to: number) {
+    const [h] = this.list.splice(from, 1)
+    this.list.splice(to, 0, h)
+  }
+
+  save() { this.#save() }
+
   shoot(id: string): Shot | undefined {
     const h = this.byId(id)
     if (!h) return

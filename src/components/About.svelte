@@ -11,6 +11,8 @@
     <li>Tap the check after every attempt, good or bad.</li>
     <li>Tapped by mistake? Hit Undo on the card or on the bar at the bottom.</li>
     <li>Open a habit to rename it, fix any shot, or delete it.</li>
+    <li>Hold a card for a moment, then drag it to change the order.</li>
+    <li>Lots of habits? Switch to small cards in the menu.</li>
   </ul>
   <p class="note">Your shots are stored on this device. Sign-in and sync are coming.</p>
 </div>

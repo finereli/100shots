@@ -4,11 +4,11 @@ Habit tracker built on one idea: when you're bad at something, count your attemp
 
 ## Stack
 
-Svelte 5 + Vite + TypeScript PWA from the pwa skill kit (`shared/` holds the vendored kit files, keep their `pwa-kit:` headers). Deployed as a Cloudflare Worker with static assets only (`wrangler.jsonc`, custom domain 100shots.finereli.com). No backend yet.
+Svelte 5 + Vite + TypeScript PWA from the pwa skill kit (`shared/` holds the vendored kit files, keep their `pwa-kit:` headers). `shared/lib/drag-reorder.svelte.ts` is the kit's `reorder` v1 plus a local `press` action (long-press to drag, no handle) - a candidate to promote back to the kit. Deployed as a Cloudflare Worker with static assets only (`wrangler.jsonc`, custom domain 100shots.finereli.com). No backend yet.
 
 ## Data
 
-Local-first. Everything lives in localStorage under `100shots.data.v1` (`src/lib/habits.svelte.ts`): habits with UUIDs and a list of shots (`{id, at}` in epoch ms). Shot i (0-based) is number `100 - i`; past 100 it reads +1, +2... Planned next: Google sign-in (kit `auth/`) with D1 sync, merging by id. Deletes are hard right now; sync will need tombstones.
+Local-first. Everything lives in localStorage under `100shots.data.v1` (`src/lib/habits.svelte.ts`): habits with UUIDs and a list of shots (`{id, at}` in epoch ms). Shot i (0-based) is number `100 - i`; past 100 it reads +1, +2... The habits array order is the order on screen (hold a card to drag it). Per-device display prefs (small cards) live separately under `100shots.prefs.v1` (`src/lib/prefs.svelte.ts`) and shouldn't sync. Planned next: Google sign-in (kit `auth/`) with D1 sync, merging by id. Deletes are hard right now; sync will need tombstones.
 
 ## Commands
 

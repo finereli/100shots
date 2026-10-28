@@ -10,7 +10,9 @@
   import HabitDetail from './components/HabitDetail.svelte'
   import About from './components/About.svelte'
   import Snackbar from './components/Snackbar.svelte'
+  import { DragReorder } from '$shared/lib/drag-reorder.svelte'
   import { habits } from './lib/habits.svelte'
+  import { prefs } from './lib/prefs.svelte'
   import { router } from './lib/router.svelte'
 
   router.start()
@@ -29,6 +31,14 @@
     { label: 'The idea', hash: '/about', current: route.view === 'about' },
   ])
   const title = $derived(route.view === 'about' ? 'The idea' : habit ? habit.name : '100 Shots')
+
+  // Hold a card to pick it up, drag to reorder. The order saves on drop.
+  const reorder = new DragReorder({
+    onstart: () => navigator.vibrate?.(15),
+    onmove: (from, to) => habits.move(from, to),
+    ondrop: () => habits.save(),
+    scrollEl: () => document.querySelector('main'),
+  })
 
   function toggleDark() {
     dark = !dark
@@ -49,15 +59,23 @@
     {:else if habit}
       <HabitDetail {habit} />
     {:else}
-      <div class="list">
+      <div class="list" class:compact={prefs.compact}>
         {#if habits.list.length === 0}
           <div class="intro">
             <p class="big">Expect 100 bad attempts.</p>
             <p>Pick something you're bad at. Your first attempt is number 100, the next is 99, and so on down. Every bad one is part of the plan.</p>
           </div>
         {/if}
-        {#each habits.list as h (h.id)}
-          <HabitCard habit={h} />
+        {#each habits.list as h, i (h.id)}
+          <div
+            class="slot"
+            class:dragging={reorder.dragIndex === i}
+            use:reorder.row={i}
+            use:reorder.press={i}
+            style={reorder.styleFor(i)}
+          >
+            <HabitCard habit={h} compact={prefs.compact} />
+          </div>
         {/each}
         <AddHabit autofocus={habits.list.length === 0} />
       </div>
@@ -73,6 +91,10 @@
     <button class="mode" onclick={toggleDark} tabindex={menuOpen ? 0 : -1}>
       <Icon name={dark ? 'light_mode' : 'dark_mode'} size={20} />
       {dark ? 'Light mode' : 'Dark mode'}
+    </button>
+    <button class="mode" onclick={() => prefs.setCompact(!prefs.compact)} tabindex={menuOpen ? 0 : -1}>
+      <Icon name={prefs.compact ? 'view_agenda' : 'view_stream'} size={20} />
+      {prefs.compact ? 'Large cards' : 'Small cards'}
     </button>
     <!-- The reload icon is the always-there escape hatch (forget the cached
          app, load it fresh); it lights up when a new version is waiting. -->
@@ -105,6 +127,15 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+  .list.compact { gap: 10px; }
+  .slot { position: relative; }
+  /* The picked-up card floats above the others. */
+  .slot.dragging { z-index: 5; }
+  .slot.dragging :global(.card) {
+    scale: 1.02;
+    border-color: var(--accent-light);
+    box-shadow: 0 10px 30px rgba(44, 24, 16, 0.18);
   }
   .intro { padding: 12px 6px 4px; line-height: 1.55; color: var(--text-secondary); }
   .intro .big { font-family: var(--font-num); font-size: 1.6rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; line-height: 1.2; }

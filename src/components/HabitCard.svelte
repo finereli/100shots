@@ -4,13 +4,14 @@
   import { undo } from '../lib/undo.svelte'
   import { router } from '../lib/router.svelte'
 
-  let { habit }: { habit: Habit } = $props()
+  let { habit, compact = false }: { habit: Habit; compact?: boolean } = $props()
 
   const n = $derived(habit.shots.length)
   // The big number is the shot you're about to take: 100 before the first.
   const next = $derived(shotLabel(n))
   const done = $derived(n >= TARGET)
   const today = $derived(shotsToday(habit))
+  const progress = $derived(Math.min(n, TARGET) / TARGET)
   let pop = $state(0)
   let lastTap = 0
 
@@ -35,43 +36,62 @@
   }
 </script>
 
-<article class="card" class:done>
+<article class="card" class:done class:compact>
   <button class="open" onclick={() => router.go(`/h/${habit.id}`)} aria-label="Open {habit.name}"></button>
 
-  <header>
-    <h2>{habit.name}</h2>
-    {#if today}<span class="today">{today} today</span>{/if}
-  </header>
-
-  <div class="main">
-    <div class="count">
+  {#if compact}
+    <!-- Compact: the number, the name, a thin progress bar and the button.
+         The 100 dots become the bar; the label, the "n of 100" line and the
+         card's Undo go (the snackbar still offers undo after every shot). -->
+    <div class="row">
       {#key pop}<span class="num" class:popped={pop > 0}>{next}</span>{/key}
-      <span class="label">
-        {#if n === 0}first shot
-        {:else if n < TARGET}{TARGET - n === 1 ? 'last bad shot' : 'next shot'}
-        {:else if n === TARGET}100 bad shots, done
-        {:else}past 100{/if}
-      </span>
-    </div>
-    <button class="shoot" onclick={shoot} aria-label="Log shot {next}">
-      <Icon name="check" size={40} />
-    </button>
-  </div>
-
-  <div class="dots" aria-hidden="true">
-    {#each { length: TARGET } as _, i}
-      <span class:on={i < n}></span>
-    {/each}
-  </div>
-
-  <footer>
-    <span class="meta">{n} of {TARGET}{n > TARGET ? ` (+${n - TARGET})` : ''}</span>
-    {#if n > 0}
-      <button class="undo" onclick={undoLast} aria-label="Undo last shot">
-        <Icon name="undo" size={16} /> Undo
+      <div class="info">
+        <div class="line">
+          <h2>{habit.name}</h2>
+          {#if today}<span class="today">{today} today</span>{/if}
+        </div>
+        <span class="bar" aria-hidden="true"><span style="width: {progress * 100}%"></span></span>
+      </div>
+      <button class="shoot" data-no-drag onclick={shoot} aria-label="Log shot {next}">
+        <Icon name="check" size={30} />
       </button>
-    {/if}
-  </footer>
+    </div>
+  {:else}
+    <header>
+      <h2>{habit.name}</h2>
+      {#if today}<span class="today">{today} today</span>{/if}
+    </header>
+
+    <div class="main">
+      <div class="count">
+        {#key pop}<span class="num" class:popped={pop > 0}>{next}</span>{/key}
+        <span class="label">
+          {#if n === 0}first shot
+          {:else if n < TARGET}{TARGET - n === 1 ? 'last bad shot' : 'next shot'}
+          {:else if n === TARGET}100 bad shots, done
+          {:else}past 100{/if}
+        </span>
+      </div>
+      <button class="shoot" data-no-drag onclick={shoot} aria-label="Log shot {next}">
+        <Icon name="check" size={40} />
+      </button>
+    </div>
+
+    <div class="dots" aria-hidden="true">
+      {#each { length: TARGET } as _, i}
+        <span class:on={i < n}></span>
+      {/each}
+    </div>
+
+    <footer>
+      <span class="meta">{n} of {TARGET}{n > TARGET ? ` (+${n - TARGET})` : ''}</span>
+      {#if n > 0}
+        <button class="undo" data-no-drag onclick={undoLast} aria-label="Undo last shot">
+          <Icon name="undo" size={16} /> Undo
+        </button>
+      {/if}
+    </footer>
+  {/if}
 </article>
 
 <style>
@@ -82,13 +102,18 @@
     border-radius: 18px;
     padding: 16px 18px 10px;
     box-shadow: var(--shadow-card);
-    transition: border-color 0.15s, transform 0.12s;
+    transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
+    /* Holding a card picks it up to reorder: no text selection or iOS
+       callout on the long press. */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
   @media (hover: hover) { .card:hover { border-color: var(--accent-light); } }
   .card:has(.open:active) { transform: scale(0.99); }
   /* The whole card opens the habit; the buttons sit above this layer. */
   .open { position: absolute; inset: 0; border-radius: inherit; z-index: 0; }
-  header, .main, footer { position: relative; z-index: 1; pointer-events: none; }
+  header, .main, footer, .row { position: relative; z-index: 1; pointer-events: none; }
   .shoot, .undo { pointer-events: auto; }
 
   header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -174,4 +199,28 @@
     border-radius: 8px;
   }
   .undo:hover { color: var(--accent-deep); }
+
+  /* Compact: one row, about a third of the full card's height. */
+  .card.compact { padding: 10px 10px 10px 14px; border-radius: 14px; }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .compact .num {
+    flex: none;
+    /* Three digits wide, so every name starts on the same line. */
+    min-width: 3ch;
+    font-size: 1.85rem;
+    transform-origin: center;
+    text-align: center;
+  }
+  .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+  .line { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .compact h2 { font-size: 0.98rem; line-height: 1.2; }
+  .bar {
+    height: 5px;
+    border-radius: 99px;
+    background: var(--dot-empty);
+    overflow: hidden;
+  }
+  .bar span { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width 0.2s; }
+  .compact .today { font-size: 0.7rem; padding: 1px 8px; }
+  .compact .shoot { width: 50px; height: 50px; box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 30%, transparent); }
 </style>
