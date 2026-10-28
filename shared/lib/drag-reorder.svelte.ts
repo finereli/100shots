@@ -110,6 +110,13 @@ export class DragReorder {
    * can block scrolling from the listeners present when the touch begins.
    * The click that ends a drag is swallowed so the row doesn't also open.
    * The row needs `-webkit-touch-callout: none; user-select: none`.
+   *
+   * A finger drag is driven by touch events, not pointer events. Android
+   * Chrome cancels the pointer stream of a touch that started with
+   * `touch-action: auto` (or loses it when a swap moves the row's node), so
+   * the row dropped out from under the finger as soon as it left the card.
+   * Touch events stay bound to the element the finger first touched, which
+   * travels with the row, so the row's own listeners see the whole drag.
    */
   press = (node: HTMLElement, index: number) => {
     let i = index
@@ -117,6 +124,7 @@ export class DragReorder {
     let x0 = 0
     let y0 = 0
     let y = 0
+    let touch = false
     const delay = this.#opts.pressDelay ?? 400
     const slop = this.#opts.pressSlop ?? 8
 
@@ -136,17 +144,24 @@ export class DragReorder {
       if ((e.target as Element).closest('[data-no-drag]')) return
       x0 = e.clientX
       y0 = y = e.clientY
+      touch = e.pointerType === 'touch'
       window.addEventListener('pointermove', watch)
       window.addEventListener('pointerup', cancel)
       window.addEventListener('pointercancel', cancel)
       timer = setTimeout(() => {
         cancel()
         this.#swallowClick = true
-        this.#begin(i, y)
+        this.#begin(i, y, touch)
       }, delay)
     }
     const touchmove = (e: TouchEvent) => {
-      if (this.dragIndex !== null && e.cancelable) e.preventDefault()
+      if (this.dragIndex === null) return
+      if (e.cancelable) e.preventDefault()
+      const t = e.touches[0]
+      if (this.#touchDrag && t) this.#moveTo(t.clientY)
+    }
+    const touchend = () => {
+      if (this.#touchDrag) this.#end()
     }
     // Android shows a context menu on a long press; never during a drag.
     const menu = (e: Event) => {
@@ -155,6 +170,8 @@ export class DragReorder {
 
     node.addEventListener('pointerdown', down)
     node.addEventListener('touchmove', touchmove, { passive: false })
+    node.addEventListener('touchend', touchend)
+    node.addEventListener('touchcancel', touchend)
     node.addEventListener('contextmenu', menu)
     return {
       update: (ni: number) => {
@@ -164,14 +181,17 @@ export class DragReorder {
         cancel()
         node.removeEventListener('pointerdown', down)
         node.removeEventListener('touchmove', touchmove)
+        node.removeEventListener('touchend', touchend)
+        node.removeEventListener('touchcancel', touchend)
         node.removeEventListener('contextmenu', menu)
       },
     }
   }
 
   #swallowClick = false
+  #touchDrag = false
 
-  #onMove = (e: PointerEvent) => this.#move(e)
+  #onMove = (e: PointerEvent) => this.#moveTo(e.clientY)
   #onUp = () => this.#end()
 
   /** Inline style for row `index` (the dragged row's translate). */
@@ -190,22 +210,30 @@ export class DragReorder {
     this.#begin(index, e.clientY)
   }
 
-  #begin(index: number, y: number) {
+  // `touch`: the row's touch listeners drive the drag (see `press`), and the
+  // window's only job is to catch the touch ending somewhere unexpected.
+  #begin(index: number, y: number, touch = false) {
     this.dragIndex = index
     this.offset = 0
     this.#pointerY = y
-    window.addEventListener('pointermove', this.#onMove)
-    window.addEventListener('pointerup', this.#onUp)
-    window.addEventListener('pointercancel', this.#onUp)
+    this.#touchDrag = touch
+    if (touch) {
+      window.addEventListener('touchend', this.#onUp)
+      window.addEventListener('touchcancel', this.#onUp)
+    } else {
+      window.addEventListener('pointermove', this.#onMove)
+      window.addEventListener('pointerup', this.#onUp)
+      window.addEventListener('pointercancel', this.#onUp)
+    }
     document.body.style.userSelect = 'none'
     this.#opts.onstart?.()
     this.#raf = requestAnimationFrame(this.#autoscroll)
   }
 
-  #move(e: PointerEvent) {
+  #moveTo(y: number) {
     if (this.dragIndex === null) return
-    const dy = e.clientY - this.#pointerY
-    this.#pointerY = e.clientY
+    const dy = y - this.#pointerY
+    this.#pointerY = y
     this.offset += dy
     this.#settle()
   }
@@ -291,6 +319,9 @@ export class DragReorder {
     window.removeEventListener('pointermove', this.#onMove)
     window.removeEventListener('pointerup', this.#onUp)
     window.removeEventListener('pointercancel', this.#onUp)
+    window.removeEventListener('touchend', this.#onUp)
+    window.removeEventListener('touchcancel', this.#onUp)
+    this.#touchDrag = false
     document.body.style.userSelect = ''
     this.dragIndex = null
     this.offset = 0
