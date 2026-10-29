@@ -35,6 +35,21 @@
   </section>
 
   <section>
+    <h3>Notes</h3>
+    <div class="card">
+      <p class="lead">Ask for a note after every shot, or only when you tap Note on the bar. Either way, any shot's note can be written or edited later from its habit's history.</p>
+      <div class="seg" role="radiogroup" aria-label="When to ask for a note">
+        <button role="radio" aria-checked={prefs.askNote} class:on={prefs.askNote} onclick={() => prefs.setAskNote(true)}>
+          After every shot
+        </button>
+        <button role="radio" aria-checked={!prefs.askNote} class:on={!prefs.askNote} onclick={() => prefs.setAskNote(false)}>
+          When I tap Note
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section>
     <h3>Reminders</h3>
     <div class="card">
       {#if reminders.needsInstall}

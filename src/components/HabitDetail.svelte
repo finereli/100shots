@@ -4,6 +4,7 @@
   import { habits, shotLabel, shotsToday, TARGET, type Habit } from '../lib/habits.svelte'
   import { undo } from '../lib/undo.svelte'
   import { router } from '../lib/router.svelte'
+  import { noteSheet } from '../lib/note-sheet.svelte'
 
   let { habit }: { habit: Habit } = $props()
 
@@ -32,19 +33,6 @@
     if (r) undo.offer(`Shot ${shotLabel(r.index)} removed`, () => habits.restoreShot(habit.id, r.shot))
   }
 
-  // Notes: tap a shot to write or edit its note, in place.
-  let editing = $state<string | null>(null)
-  let draft = $state('')
-  function openNote(id: string, note = '') {
-    editing = id
-    draft = note
-  }
-  function closeNote(save: boolean) {
-    if (editing && save) habits.setNote(habit.id, editing, draft)
-    editing = null
-  }
-  function focus(node: HTMLInputElement) { node.focus() }
-
   function del() {
     const index = habits.list.indexOf(habit)
     const h = habits.remove(habit.id)
@@ -67,31 +55,15 @@
 
   <h3>Shots</h3>
   {#if rows.length}
-    <p class="tip">Tap a shot to add a note.</p>
+    <p class="tip">Tap a shot to write or read its note.</p>
     <ul class="shots">
       {#each rows as { s, label } (s.id)}
         <li>
           <span class="no">{label}</span>
-          {#if editing === s.id}
-            <form class="edit" onsubmit={(e) => { e.preventDefault(); closeNote(true) }}>
-              <span class="when">{dayFmt.format(s.at)} · {timeFmt.format(s.at)}</span>
-              <input
-                use:focus
-                bind:value={draft}
-                placeholder="What happened on this one?"
-                maxlength="500"
-                enterkeyhint="done"
-                aria-label="Note on shot {label}"
-                onblur={() => closeNote(true)}
-                onkeydown={(e) => e.key === 'Escape' && closeNote(false)}
-              />
-            </form>
-          {:else}
-            <button class="body" onclick={() => openNote(s.id, s.note)} aria-label="{s.note ? 'Edit' : 'Add'} note on shot {label}">
-              <span class="when">{dayFmt.format(s.at)} · {timeFmt.format(s.at)}</span>
-              {#if s.note}<span class="note">{s.note}</span>{/if}
-            </button>
-          {/if}
+          <button class="body" onclick={() => noteSheet.open({ habitId: habit.id, shotId: s.id })} aria-label="{s.note ? 'Read or edit the' : 'Add a'} note on shot {label}">
+            <span class="when">{dayFmt.format(s.at)} · {timeFmt.format(s.at)}</span>
+            {#if s.note}<span class="note">{s.note}</span>{/if}
+          </button>
           <button class="x" onclick={() => removeShot(s.id)} aria-label="Remove shot {label}">
             <Icon name="close" size={20} />
           </button>
@@ -155,18 +127,19 @@
   .shots li + li { border-top: 1px solid var(--border); }
   .no { align-self: center; font-family: var(--font-num); font-weight: 600; min-width: 2.4em; font-variant-numeric: tabular-nums; }
   .when { font-size: 0.85rem; color: var(--text-secondary); }
-  .body, .edit { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 2px; padding: 8px 0; text-align: start; }
-  .note { font-size: 0.92rem; color: var(--text-primary); line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .edit input {
-    width: 100%;
-    font-size: 1rem;
-    padding: 6px 10px;
-    margin: 2px 0 0 -10px;
-    border: 1px solid var(--accent);
-    box-shadow: 0 0 0 1px var(--accent);
-    border-radius: 10px;
-    background: var(--bg-surface);
-    outline: none;
+  .body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 2px; padding: 8px 0; text-align: start; }
+  /* Long notes show their first lines here; the sheet shows all of it. */
+  .note {
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .tip { font-size: 0.78rem; color: var(--text-secondary); margin: -4px 2px 8px; }
   .x { align-self: center; width: 44px; height: 44px; display: grid; place-items: center; color: var(--text-secondary); border-radius: 50%; opacity: 0.7; }

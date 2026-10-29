@@ -10,6 +10,7 @@
   import HabitDetail from './components/HabitDetail.svelte'
   import About from './components/About.svelte'
   import Snackbar from './components/Snackbar.svelte'
+  import NoteSheet from './components/NoteSheet.svelte'
   import Settings from './components/Settings.svelte'
   import InstallBanner from './components/InstallBanner.svelte'
   import ReminderBanner from './components/ReminderBanner.svelte'
@@ -128,6 +129,7 @@
   {/snippet}
 </Drawer>
 
+<NoteSheet />
 <Snackbar />
 <Toast />
 

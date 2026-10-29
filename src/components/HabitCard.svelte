@@ -4,6 +4,8 @@
   import { habits, shotsToday, TARGET, type Habit } from '../lib/habits.svelte'
   import { undo } from '../lib/undo.svelte'
   import { router } from '../lib/router.svelte'
+  import { noteSheet } from '../lib/note-sheet.svelte'
+  import { prefs } from '../lib/prefs.svelte'
 
   let { habit, compact = false }: { habit: Habit; compact?: boolean } = $props()
 
@@ -75,10 +77,14 @@
     if (!s) return
     pop++
     navigator.vibrate?.(12)
-    undo.offer(`${habit.name}: ${Math.max(TARGET - n, 0)} left`, () => habits.removeShot(habit.id, s.id), 5000, {
-      note: (text) => habits.setNote(habit.id, s.id, text),
-      placeholder: `Note on ${habit.name}`,
-    })
+    const text = `${habit.name}: ${Math.max(TARGET - n, 0)} left`
+    const removeIt = () => habits.removeShot(habit.id, s.id)
+    const writeNote = (onclose?: (saved: boolean) => void) =>
+      noteSheet.open({ habitId: habit.id, shotId: s.id, fresh: true, onclose })
+    // Asking: the sheet comes up now and Undo waits until it closes.
+    // Otherwise Undo comes now, with a Note button for when you want one.
+    if (prefs.askNote) writeNote((saved) => undo.offer(saved ? `Note saved. ${text}` : text, removeIt))
+    else undo.offer(text, removeIt, 5000, { label: 'Note', run: () => writeNote() })
   }
 
   function undoLast(e: MouseEvent) {

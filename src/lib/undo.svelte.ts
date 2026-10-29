@@ -1,24 +1,20 @@
 // One undo slot, shown as a snackbar. A new action replaces the old offer:
-// the snackbar is for "oops, wrong card", not a history.
-//
-// An offer can also take a note (a logged shot does): the bar shows a Note
-// button that turns it into a one-line field in place. Typing stops the
-// timer; a new offer saves whatever was typed before it replaces the bar.
+// the snackbar is for "oops, wrong card", not a history. An offer can carry
+// one more button before Undo (a logged shot's Note, when the app isn't
+// asking for notes on its own).
 
-type Offer = { id: number; text: string; run: () => void; note?: (text: string) => void; placeholder?: string }
+type Action = { label: string; run: () => void }
+type Offer = { id: number; text: string; run: () => void; action?: Action }
 
 class Undo {
   current = $state<Offer | null>(null)
-  editing = $state(false)
-  draft = $state('')
   #timer: ReturnType<typeof setTimeout> | undefined
   #id = 0
 
-  offer(text: string, run: () => void, ms = 5000, extra: { note?: (text: string) => void; placeholder?: string } = {}) {
-    this.saveNote()
+  offer(text: string, run: () => void, ms = 5000, action?: Action) {
     clearTimeout(this.#timer)
     const id = ++this.#id
-    this.current = { id, text, run, ...extra }
+    this.current = { id, text, run, action }
     this.#timer = setTimeout(() => this.dismiss(id), ms)
   }
 
@@ -29,35 +25,16 @@ class Undo {
     c.run()
   }
 
-  // Open the note field: the bar stays until the note is saved or dropped.
-  startNote() {
-    if (!this.current?.note) return
-    clearTimeout(this.#timer)
-    this.draft = ''
-    this.editing = true
-  }
-
-  // Save what was typed (empty saves nothing) and close the bar.
-  saveNote() {
-    if (!this.editing) return
+  act() {
     const c = this.current
-    const text = this.draft.trim()
-    this.editing = false
-    this.draft = ''
-    if (c?.note && text) c.note(text)
-    if (c) this.dismiss(c.id)
-  }
-
-  cancelNote() {
-    this.draft = ''
-    this.saveNote()
+    if (!c?.action) return
+    this.dismiss(c.id)
+    c.action.run()
   }
 
   dismiss(id?: number) {
     if (id !== undefined && this.current?.id !== id) return
     clearTimeout(this.#timer)
-    this.editing = false
-    this.draft = ''
     this.current = null
   }
 }
