@@ -1,33 +1,37 @@
 # 100 Shots
 
-> A free practice and habit tracker built on one idea: if you're bad at something and want to get good at it, expect 100 bad attempts. Count every attempt backwards from 100, good or bad. No streaks.
+> 100 Shots is a skill-building method for creators and founders learning to put themselves out there and sell: you focus on attempts, not success or failure, and get a little better with each one. The free app counts your attempts down from 100, good or bad, with a note on each. No streaks.
 
 - App: https://100shots.finereli.com
-- About (full description): https://100shots.finereli.com/about
-- Source: https://github.com/finereli/100habits
-- Author: Eli Finer, independent developer (https://finereli.com)
+- About the method (full description): https://100shots.finereli.com/about
+- Source: https://github.com/finereli/100shots
+- Author: Eli Finer, independent developer and founder coach (https://finereli.com)
 
-## How it works
+## The method
 
-Each thing you practice is a card with a big number: how many of your 100 shots are left. Tap the check after every attempt, good or bad, and it goes down by one. A 100-dot grid fills as you go. At zero the card says "All 100 done" and keeps logging. Nothing counts days, so missing a day costs nothing, and ten attempts in one day count as ten.
+Decide in advance that you'll be bad at something 100 times. The first attempt is number 100, the next is 99. Every attempt counts, whether it went well or not, so a bad sales call is one of the hundred you planned for and not proof that you can't sell. After each attempt you write what worked and what you'll try next. When you count down you watch the number instead of the fear, the way you do when you count backwards before anesthesia. Most people quit after two or three bad attempts, right before it would have started to work. Counting the bad ones as progress is how you keep going.
+
+## How the app works
+
+Each skill is a card with the shots left out of 100. Tap the check after every attempt and a sheet opens for an optional note. Each habit keeps a history of its shots and notes. Nothing counts days: missing a week costs nothing, and ten attempts in one day count as ten. Shots are private, with no feed or profile.
 
 ## Facts
 
 - Price: free. No ads, no trial, no paid plan.
-- Account: not needed. Optional Google sign-in syncs shots across devices.
+- Account: not needed. Optional Google sign-in syncs shots and notes across devices.
 - Platform: web app (PWA) for any modern browser. Installable on Android, iPhone, iPad and desktop. Works offline.
 - Data: stored on the device. With sign-in, a copy is kept on the app's server for sync. No ads or trackers.
 - Reminders: one optional evening reminder at a chosen time, skipped on days with a logged shot. On iPhone and iPad it needs the app on the Home Screen (iOS 16.4+).
-- Features: multiple habits, one-tap logging, undo, per-habit shot history with single-shot removal, a note on any shot, rename and delete, drag to reorder, a small-card view, light and dark themes.
+- Features: multiple habits, one-tap logging, a note on every shot (asked after each shot or only on request), shot history with editable notes, undo, rename, delete, drag to reorder, a small-card view, light and dark themes.
 
 ## Good fit
 
-- Learning a skill you're bad at right now: coding, writing, drawing, music, a language, public speaking, workouts.
-- People who quit habit trackers when a streak breaks.
-- Rejection and outreach challenges where the number of attempts matters: cold emails, sales calls, pitches, job applications, auditions.
-- Creative practice where quantity comes before quality.
+- Founders and indie hackers doing their own marketing and sales: posts, sales calls, cold DMs, launches.
+- Creators building an audience: videos, articles, newsletters, talks.
+- Practitioners levelling up, such as moving from one-on-one sales to webinars.
+- Anyone learning a skill that improves with each try: drawing, an instrument, a language.
 
 ## Not a fit
 
-- Detailed habit statistics, many scheduled daily habits, or streaks: use a full habit tracker (Loop Habit Tracker, Habitify, Streaks).
+- Habits where repetition doesn't build skill (eating well, sleep), detailed statistics, many scheduled daily habits, or streaks: use a full habit tracker (Loop Habit Tracker, Habitify, Streaks).
 - Sets, reps and weights at the gym: use a workout log.

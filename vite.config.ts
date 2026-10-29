@@ -31,7 +31,7 @@ export default defineConfig({
         manifest: {
           name: '100 Shots',
           short_name: '100 Shots',
-          description: 'Count your practice backwards from 100. Expect 100 bad attempts, and practice in peace.',
+          description: 'A method for creators and founders learning to put themselves out there and sell: count your attempts down from 100, good or bad, and get a little better with each one.',
           lang: 'en',
           dir: 'ltr',
           start_url: '/',

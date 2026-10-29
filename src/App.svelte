@@ -34,9 +34,9 @@
   const entries = $derived([
     { label: 'Habits', hash: '/', current: route.view === 'home' },
     { label: 'Settings', hash: '/settings', current: route.view === 'settings' },
-    { label: 'The idea', hash: '/about', current: route.view === 'about' },
+    { label: 'The method', hash: '/about', current: route.view === 'about' },
   ])
-  const title = $derived(route.view === 'about' ? 'The idea' : route.view === 'settings' ? 'Settings' : habit ? habit.name : '100 Shots')
+  const title = $derived(route.view === 'about' ? 'The method' : route.view === 'settings' ? 'Settings' : habit ? habit.name : '100 Shots')
 
   // Onboarding, once there's a first habit: install the app, then turn on
   // the nightly reminder. One banner at a time, on the home screen only.
@@ -85,7 +85,7 @@
         {#if habits.list.length === 0}
           <div class="intro">
             <p class="big">Expect 100 bad attempts.</p>
-            <p>Pick something you're bad at. Your first attempt is number 100, the next is 99, and so on down. Every bad one is part of the plan.</p>
+            <p>Pick something you have to do but aren't good at yet, like posting online, sales calls or cold outreach. Your first attempt is number 100, the next is 99. Every bad one is part of the plan, and you get a little better with each.</p>
           </div>
         {/if}
         {#each habits.list as h, i (h.id)}

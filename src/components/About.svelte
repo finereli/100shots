@@ -1,20 +1,21 @@
 <script lang="ts"></script>
 
 <div class="about">
-  <p class="big">Start at 100 and count backwards.</p>
-  <p>If you're bad at something and want to get good at it (coding, writing, working out), expect to have 100 bad attempts.</p>
-  <p>So the first attempt is 100. The second is 99. The third is 98.</p>
-  <p>It rewires your expectations. A bad attempt isn't a failure, it's one of the hundred you planned for. Less frustration, and you get to practice in peace.</p>
-  <h3>How to use it</h3>
+  <p class="big">Expect 100 bad attempts.</p>
+  <p>100 Shots is a method for getting good at the work founders and creators have to do in public: posting, sales calls, outreach, webinars, shipping. You count attempts, not results. Your first attempt is number 100, the next is 99, and every one counts, good or bad.</p>
+  <p>Most people try something like this two or three times, decide it isn't for them, and stop. Usually that happens right before it would have started to work. When you count down, a bad sales call stops being proof that you can't sell. It's call 97 of the hundred you planned for.</p>
+  <p>After each shot, write a line about how it went and what you'll try next. You get better by learning from one attempt to the next, and the notes are where you do that.</p>
+  <p>Keep taking shots, a little better each time, and at some point your skill meets some luck.</p>
+
+  <h3>How to use the app</h3>
   <ul>
-    <li>Add a habit for each thing you're practicing.</li>
-    <li>Tap the check after every attempt, good or bad.</li>
-    <li>Tapped by mistake? Hit Undo on the card or on the bar at the bottom.</li>
-    <li>After each shot a note sheet opens: write how it went, or tap Skip. Tap any shot in a habit's history to read or edit its note. Settings can make notes on-request only.</li>
-    <li>The ⋮ on a card renames or deletes the habit. Shot history lets you fix any single shot.</li>
+    <li>Add a habit for each skill you're working on.</li>
+    <li>Tap the check after every attempt, good or bad. A sheet opens for a note; write one or tap Skip.</li>
+    <li>Tapped by mistake? Hit Undo on the bar at the bottom.</li>
+    <li>Tap a card to see its history. Tap any shot there to read or edit its note.</li>
+    <li>The ⋮ on a card renames or deletes the habit.</li>
     <li>Hold a card for a moment, then drag it to change the order.</li>
-    <li>Lots of habits? Switch to small cards in Settings.</li>
-    <li>Turn on the evening reminder in Settings. It skips days you already logged a shot.</li>
+    <li>In Settings: small cards, notes only when you ask, and an evening reminder that skips days you already took a shot.</li>
   </ul>
   <p class="note">Your shots are stored on this device. Sign in from Settings to keep them on every device.</p>
 </div>
