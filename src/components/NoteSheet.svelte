@@ -59,6 +59,20 @@
     cur.onclose?.(saved)
   }
 
+  // Three lines to start; grows with the text up to the CSS max-height,
+  // then scrolls. JS rather than `field-sizing: content`, which iOS lacks.
+  function autosize(node: HTMLTextAreaElement) {
+    const fit = () => {
+      node.style.height = 'auto'
+      node.style.height = `${node.scrollHeight + 2}px` // + the borders
+    }
+    fit()
+    // Again once bind:value has filled in an existing note.
+    requestAnimationFrame(fit)
+    node.addEventListener('input', fit)
+    return { destroy: () => node.removeEventListener('input', fit) }
+  }
+
   function focus(node: HTMLTextAreaElement) {
     node.focus()
     // Editing an old note: start at the end of it.
@@ -93,7 +107,9 @@
       <p>Shot {shotLabel(index)} · {timeFmt.format(shot.at)}</p>
     </header>
     <textarea
+      use:autosize
       use:focus
+      rows="3"
       bind:value={draft}
       maxlength="4000"
       placeholder={t.fresh ? 'How did it go? What will you try next time?' : 'What happened on this one?'}
@@ -126,7 +142,7 @@
     z-index: 101;
     margin: 0 auto;
     max-width: 620px;
-    height: min(30rem, calc(100% - 40px));
+    max-height: calc(100% - 40px);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -142,8 +158,12 @@
   h2 { font-size: 1.1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   header p { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
   textarea {
-    flex: 1;
+    /* The sheet's old full height for text; past it the text scrolls. And
+       never more than the space left above the keyboard. */
+    max-height: 19.5rem;
     min-height: 0;
+    flex-shrink: 1;
+    box-sizing: border-box;
     width: 100%;
     resize: none;
     font-size: 1rem; /* 16px: iOS doesn't zoom into the field */
