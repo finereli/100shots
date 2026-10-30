@@ -4,7 +4,7 @@ Habit tracker built on one idea: when you're bad at something, count your attemp
 
 ## Stack
 
-Svelte 5 + Vite + TypeScript PWA from the pwa skill kit (`shared/` holds the vendored kit files, keep their `pwa-kit:` headers). `shared/lib/drag-reorder.svelte.ts` is the kit's `reorder` v1 plus a local `press` action (long-press anywhere on a row to drag, no handle; `data-no-drag` opts out the card's buttons) - a candidate to promote back to the kit. Deployed as a Cloudflare Worker (`wrangler.jsonc`, custom domain 100shots.finereli.com): static assets plus `POST /api/sync` and `POST /api/push/*` (`worker/index.ts`), a cron every 5 minutes for reminders, on D1 `100shots-db`.
+Svelte 5 + Vite + TypeScript PWA from the pwa skill kit (`shared/` holds the vendored kit files, keep their `pwa-kit:` headers). `shared/lib/drag-reorder.svelte.ts` is the kit's `reorder` v1 plus local changes, all candidates for the kit: a `press` action (long-press anywhere on a row to drag, no handle; `data-no-drag` opts out the card's buttons), touch drags driven by touch events, the scroll container locked (`overflow-y: hidden`) during a drag so only edge autoscroll moves it, a wider eased edge band, and the row placed absolutely under the finger instead of from summed deltas. Deployed as a Cloudflare Worker (`wrangler.jsonc`, custom domain 100shots.finereli.com): static assets plus `POST /api/sync` and `POST /api/push/*` (`worker/index.ts`), a cron every 5 minutes for reminders, on D1 `100shots-db`.
 
 ## Data
 

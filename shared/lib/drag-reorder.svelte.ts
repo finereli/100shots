@@ -42,9 +42,9 @@ type Options = {
   ondrop: () => void
   /** Scroll container for edge autoscroll (default: the document). */
   scrollEl?: () => HTMLElement | null
-  /** Distance from the container edge that starts autoscroll (px). */
+  /** Distance from the container edge that starts autoscroll (px; default a fifth of it, 56-110). */
   edge?: number
-  /** Fastest autoscroll, px per frame. */
+  /** Fastest autoscroll, px per frame (default 18). */
   maxSpeed?: number
   /** `press` only: how long to hold before the drag starts (ms). */
   pressDelay?: number
@@ -216,6 +216,8 @@ export class DragReorder {
     this.dragIndex = index
     this.offset = 0
     this.#pointerY = y
+    const node = this.#nodeAt(index)
+    this.#grab = node ? y - node.getBoundingClientRect().top : 0
     this.#touchDrag = touch
     if (touch) {
       window.addEventListener('touchend', this.#onUp)
@@ -226,21 +228,36 @@ export class DragReorder {
       window.addEventListener('pointercancel', this.#onUp)
     }
     document.body.style.userSelect = 'none'
+    this.#lockScroll()
     this.#opts.onstart?.()
     this.#raf = requestAnimationFrame(this.#autoscroll)
   }
 
   #moveTo(y: number) {
     if (this.dragIndex === null) return
-    const dy = y - this.#pointerY
     this.#pointerY = y
-    this.offset += dy
+    this.#place()
     this.#settle()
   }
 
-  // Swap with a neighbor once the pointer crosses its midpoint. The DOM
-  // move is measured across tick() so the dragged row stays under the
-  // finger whatever the neighbor's height.
+  // Put the dragged row exactly under the finger: its top sits `grab` px
+  // above the pointer, where the finger first took hold of it. Computed
+  // from where the row is now rather than added up from deltas, so a swap
+  // and an autoscroll landing in the same frame can't make it drift. The
+  // transform is written straight to the node (and matches styleFor()), so
+  // the next read of its position is current.
+  #grab = 0
+  #place() {
+    if (this.dragIndex === null) return
+    const node = this.#nodeAt(this.dragIndex)
+    if (!node) return
+    const base = node.getBoundingClientRect().top - this.offset
+    this.offset = this.#pointerY - this.#grab - base
+    node.style.transform = `translateY(${this.offset}px)`
+  }
+
+  // Swap with a neighbor once the pointer crosses its midpoint, then place
+  // the row under the finger again from its new spot (any neighbor height).
   async #settle() {
     if (this.#busy || this.dragIndex === null) return
     this.#busy = true
@@ -273,14 +290,30 @@ export class DragReorder {
     }
   }
 
-  async #swap(dir: number, node: HTMLElement) {
+  async #swap(dir: number, _node: HTMLElement) {
     const from = this.dragIndex!
-    const before = node.getBoundingClientRect().top
     this.#opts.onmove(from, from + dir)
     this.dragIndex = from + dir
     await tick()
-    const after = node.getBoundingClientRect().top
-    this.offset -= after - before
+    this.#place()
+  }
+
+  // While dragging, only the autoscroll moves the list. Android Chrome can
+  // keep scrolling a touch that began as a possible scroll even when its
+  // touchmoves are cancelled, so the list slid under the finger; with the
+  // container's overflow hidden the finger can't scroll it, while setting
+  // scrollTop (the autoscroll) still works.
+  #locked: { el: HTMLElement; overflow: string } | null = null
+  #lockScroll() {
+    const el = this.#opts.scrollEl?.() ?? (document.scrollingElement as HTMLElement | null)
+    if (!el) return
+    this.#locked = { el, overflow: el.style.overflowY }
+    el.style.overflowY = 'hidden'
+  }
+  #unlockScroll() {
+    if (!this.#locked) return
+    this.#locked.el.style.overflowY = this.#locked.overflow
+    this.#locked = null
   }
 
   #autoscroll = () => {
@@ -290,22 +323,22 @@ export class DragReorder {
       const isDoc = el === document.scrollingElement
       const top = isDoc ? 0 : el.getBoundingClientRect().top
       const bottom = isDoc ? window.innerHeight : el.getBoundingClientRect().bottom
-      const edge = this.#opts.edge ?? 48
-      const maxSpeed = this.#opts.maxSpeed ?? 12
+      // A band a thumb can find (a fifth of the list, 56-110px), and a speed
+      // that starts slow and ramps up toward the edge (and past it).
+      const edge = this.#opts.edge ?? Math.max(56, Math.min(110, (bottom - top) / 5))
+      const maxSpeed = this.#opts.maxSpeed ?? 18
+      const speed = (depth: number) => Math.ceil(Math.min(1, depth / edge) ** 2 * maxSpeed)
       let dy = 0
-      if (this.#pointerY < top + edge) {
-        dy = -Math.ceil(Math.min(1, (top + edge - this.#pointerY) / edge) * maxSpeed)
-      } else if (this.#pointerY > bottom - edge) {
-        dy = Math.ceil(Math.min(1, (this.#pointerY - (bottom - edge)) / edge) * maxSpeed)
-      }
+      if (this.#pointerY < top + edge) dy = -speed(top + edge - this.#pointerY)
+      else if (this.#pointerY > bottom - edge) dy = speed(this.#pointerY - (bottom - edge))
       if (dy) {
         const before = el.scrollTop
         el.scrollTop += dy
         const scrolled = el.scrollTop - before
         if (scrolled) {
-          // The row's layout position moved with the scroll; compensate to
-          // keep it under the finger, then re-check for swaps.
-          this.offset += scrolled
+          // The list moved under the finger: put the row back under it and
+          // check for swaps with the rows that scrolled past.
+          this.#place()
           this.#settle()
         }
       }
@@ -323,6 +356,9 @@ export class DragReorder {
     window.removeEventListener('touchcancel', this.#onUp)
     this.#touchDrag = false
     document.body.style.userSelect = ''
+    this.#unlockScroll()
+    const node = this.dragIndex === null ? null : this.#nodeAt(this.dragIndex)
+    if (node) node.style.transform = ''
     this.dragIndex = null
     this.offset = 0
     if (this.#swallowClick) {
